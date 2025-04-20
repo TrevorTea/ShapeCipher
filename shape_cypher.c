@@ -29,6 +29,7 @@ char * encrypt(int key, char* msg) {
     unsigned int len = strlen(msg);
     char** strs = (char **) malloc(sizeof(char*) * key);
     char* res = (char *) malloc(sizeof(char) * len);
+    // TODO Add text scrubing to remove unknown chars and toupper.
     for (unsigned int i = 0; i < key; i++) {
         strs[i] = (char*) malloc(sizeof(char) * (CEIL((float)len / key)));
     }
@@ -55,14 +56,16 @@ char * encrypt(int key, char* msg) {
 ///////////////////////////////////////////////////////////////////////////////
 
 int main(int argc, char** argv) {
-    if (argc < 3 || argc > 4) {
-        fprintf(stderr, "Improper usage, only one arg can be provided.\n");
+    if (argc < 4 || argc > 5) {
+        fprintf(stderr, "Improper usage: cypher \"encode\"|\"decode\" key "
+                        "msg|path [outPath].\n");
+        return 1;
     }
 
     char * msg = NULL;
 
-    if (strstr(argv[2], ".txt")) {
-        FILE* inp = fopen(argv[2], "r");
+    if (strstr(argv[3], ".txt")) {
+        FILE* inp = fopen(argv[3], "r");
         fseek(inp, 0, SEEK_END);
         unsigned int sz = ftell(inp);
         rewind(inp);
@@ -71,18 +74,27 @@ int main(int argc, char** argv) {
         msg[sz] = '\0';
     }
     else {
-        msg = argv[2];
+        msg = argv[3];
     }
 
-    char* encrypted = encrypt(atoi(argv[1]), msg);
-
+    char* result = NULL;
+    if (strcmp(argv[1], "encrypt") == 0) {
+        result = encrypt(atoi(argv[2]), msg);
+    }
+    // TODO Add decryption.
+    else if (strcmp(argv[1], "decrypt") == 0) {
+        result = NULL;
+    }
+    
     FILE* out = NULL;
-    if (argc == 4) {
-        out = fopen(argv[3], "w");
+    if (argc == 5) {
+        out = fopen(argv[4], "w");
     }
     else out = stdout;
 
-    fprintf(out, "%s", encrypted);
+    fprintf(out, "%s", result);
     fprintf(out, "\n");
+    free(result);
+    if (out) fclose(out);
     return 0;
 }
