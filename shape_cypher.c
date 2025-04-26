@@ -2,10 +2,6 @@
 ///                                INCLUDES                                 ///
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include "shape_cypher.h"
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -45,42 +41,26 @@ char * _pad_str(char* str,
         res[i] = val;
     }
     free(str);
-    printf("%s\n", res);
     return res;
 }
 
 char * decrypt(int key, char* msg) {
-    uint len = strlen(msg);
-    uint pad_len = CEIL(((float) len) / key) * key;
-    uint chunk_size = pad_len / key;
-    char *res = (char*) malloc(sizeof(char) * (pad_len + 1));
-    char *cpy = (char*) calloc(pad_len + 1, sizeof(char));
-    
-    strcpy(cpy, msg);
+    uint len;
+    uint chunksize;
+    char *res;
 
-    cpy[pad_len] = '\0';
+    len = strlen(msg);
+    chunksize = len / key;
+    res = (char*) calloc(len + 1, sizeof(char));
 
-    for(uint i = 0; i < pad_len / key; i++) {
-        for(int j = 0; j < key; j++) {
-            res[i * key + j] = cpy[i + j * key];
+    for(uint i = 0; i < chunksize; i++) {
+        for(uint j = 0; j < key; j++) {
+            res[i * key + j] = msg[i + j * chunksize];
         }
-    }
-
-    strcpy(cpy, res);
-
-    uint j = 0;
-    for(uint i = 0; i < pad_len; i++) {
-        if (ISALPHA(cpy[i])) {
-            res[j++] = cpy[i];
-        }
-    }
-    for(uint i = len; i < pad_len; i++) {
-        res[i] = '\0';
     }
 
     shift_caeserian(res, -key);
 
-    free(cpy);
     return res;
 }
 
@@ -105,12 +85,14 @@ char * encrypt(int key, char* msg) {
         }
     }
 
+    // TODO Add dynamic padding that can be intelligently shredded later.
+
     strp = _pad_str(strp, key - (strplen % key), 'G');
     strplen = strlen(strp);
     chunksize = strplen / key;
     
     // Initializes substring array to appropriate size.
-    for (int i = 0; i < key; i++) {
+    for (uint i = 0; i < key; i++) {
         subs[i] = (char*) calloc(chunksize + 1, sizeof(char));
     }
     // Columnar encoding of substrings.
@@ -126,7 +108,7 @@ char * encrypt(int key, char* msg) {
     shift_caeserian(res, key);
     
     // Free substrs.
-    for (int i = 0; i < key; i++) {
+    for (uint i = 0; i < key; i++) {
         free(subs[i]);
     }
     free(subs);
@@ -214,11 +196,19 @@ int main(int argc, char** argv) {
 ///                                  NOTES                                  ///
 ///////////////////////////////////////////////////////////////////////////////
 /*
-    Ex:     4   hellofromafar
+    EX1:    INPUT: 4   hellofromafar
             1. Transposition.
                 homr       efa*       lrf*       loa*
             2. Caesar
                 LSQV       IJE*       PVJ*       PSE*
             3. Output
                 LSQVIJEPVJPSE
+
+    EX2     INPUT: 3 hellofromafar
+            1. Transposition
+                hlrar       eoof*       lfma*
+            2. Caesar
+                KOUDU       HRRI*       OIPD*
+            3. Output
+                KOUDUHRRIOIPD
 */
