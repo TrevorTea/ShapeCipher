@@ -34,28 +34,7 @@ static char* outpath;
 ///                                FUNCTIONS                                ///
 ///////////////////////////////////////////////////////////////////////////////
 
-// LSQVIJEPVJPSE
-// LSQV IJEP VJPS E
-
 // TODO Add safety to allocs.
-
-uint * _calc_pad_posi(uint padlen, \
-                      uint mismatch, \
-                      uint chunk_size) {
-    uint * posis = NULL;
-    if (mismatch) {
-        posis = (uint*) calloc(mismatch, sizeof(uint));
-        uint * temp = (uint*) calloc(mismatch, sizeof(uint));
-        for(uint i = 0; i < mismatch; i++) {
-            temp[i] = padlen - (i * chunk_size) - 1;
-        }
-        for(uint i = 0; i < mismatch; i++) {
-            posis[i] = temp[mismatch - i - 1];
-        }
-        free(temp);
-    }
-    return posis;
-}
 
 char * _pad_str(char* str,
                 uint padlen,
@@ -106,49 +85,51 @@ char * decrypt(int key, char* msg) {
 }
 
 char * encrypt(int key, char* msg) {
-    uint len = strlen(msg);
-    uint strp_len = 0;
-    uint chunk_size;
-    char** strs = (char **) malloc(sizeof(char*) * key);
-    char* strp = (char *) calloc(len + 1, sizeof(char));
+    uint len;
+    uint strplen;
+    uint chunksize;
+    char** subs;
+    char* strp;
+    char* res;
+
+    len = strlen(msg);
+    strplen = 0;
+    subs = (char **) malloc(sizeof(char*) * key);
+    strp = (char *) calloc(len + 1, sizeof(char));
     
     // Input scrubbing.
     for (uint i = 0; i < len; i++) {
         if(ISALPHA(msg[i])) {
-            strp[strp_len] = UPPER(msg[i]);
-            strp_len++;
+            strp[strplen] = UPPER(msg[i]);
+            strplen++;
         }
     }
-    printf("%d\n", strlen(strp));
-    strp = _pad_str(strp, key - (strp_len % key), 'G');
-    strp_len = strlen(strp);
-    printf("%s", strp);
-    printf("%d\n", strp_len);
-    chunk_size = CEIL(strp_len / key);
+
+    strp = _pad_str(strp, key - (strplen % key), 'G');
+    strplen = strlen(strp);
+    chunksize = strplen / key;
     
     // Initializes substring array to appropriate size.
     for (int i = 0; i < key; i++) {
-        strs[i] = (char*) calloc(chunk_size + 1, sizeof(char));
+        subs[i] = (char*) calloc(chunksize + 1, sizeof(char));
     }
     // Columnar encoding of substrings.
-    for(uint i = 0; i < strp_len; i++) {
-        strs[i%key][i/key] = strp[i];
+    for(uint i = 0; i < strplen; i++) {
+        subs[i%key][i/key] = strp[i];
     }
     // Combine substrings.
-    // I hate strcat
-    char* res = (char *) calloc(strp_len + 1, sizeof(char));
+    res = (char *) calloc(strplen + 1, sizeof(char));
     for(uint i = 0; i < key; i++) {
-        strcat(res, strs[i]);
+        strcat(res, subs[i]);
     }
-
     // Apply caesarian shift.
     shift_caeserian(res, key);
     
     // Free substrs.
     for (int i = 0; i < key; i++) {
-        free(strs[i]);
+        free(subs[i]);
     }
-    free(strs);
+    free(subs);
 
     return res;
 }
@@ -166,7 +147,7 @@ void parse_args(int argc, char** argv) {
     path_or_msg = argv[3];
     outpath = (argc == 5) ? argv[4] : NULL;
 
-    if (strstr(mode, "encrypt") == NULL && strstr(mode, "decrypt") == NULL) {
+    if (strcmp(mode, "encrypt") != 0 && strcmp(mode, "decrypt") != 0) {
         fprintf(stderr, "Improper usage: mode must be \"encrypt|decrypt\"\n");
         exit(EXIT_FAILURE);
     }
