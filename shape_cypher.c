@@ -13,6 +13,16 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////
+///                                 GLOBALS                                 ///
+///////////////////////////////////////////////////////////////////////////////
+
+// Static globals for arg parsing.
+static int key;
+static char* mode;
+static char* path_or_msg;
+static char* outpath;
+
+///////////////////////////////////////////////////////////////////////////////
 ///                                  ENUMS                                  ///
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -143,6 +153,25 @@ char * encrypt(int key, char* msg) {
     return res;
 }
 
+void parse_args(int argc, char** argv) {
+    // Arg parsing.
+    if (argc < 4 || argc > 5) {
+        fprintf(stderr, "Improper usage: cypher \"encode\"|\"decode\" key "
+                        "msg|path [outPath].\n");
+        exit(EXIT_FAILURE);
+    }
+
+    mode = argv[1];
+    key = atoi(argv[2]);
+    path_or_msg = argv[3];
+    outpath = (argc == 5) ? argv[4] : NULL;
+
+    if (strstr(mode, "encrypt") == NULL && strstr(mode, "decrypt") == NULL) {
+        fprintf(stderr, "Improper usage: mode must be \"encrypt|decrypt\"\n");
+        exit(EXIT_FAILURE);
+    }
+}
+
 void shift_caeserian(char* msg, int shift) {
     for(uint i = 0; i < strlen(msg); i++) {
         msg[i] = ALPHAWRAP(msg[i] + shift);
@@ -154,17 +183,7 @@ void shift_caeserian(char* msg, int shift) {
 ///////////////////////////////////////////////////////////////////////////////
 
 int main(int argc, char** argv) {
-    // Arg parsing.
-    if (argc < 4 || argc > 5) {
-        fprintf(stderr, "Improper usage: cypher \"encode\"|\"decode\" key "
-                        "msg|path [outPath].\n");
-        return 1;
-    }
-
-    char* mode = argv[1];
-    int key = atoi(argv[2]);
-    char* path_or_msg = argv[3];
-    char* outpath = (argc == 5) ? argv[4] : NULL;
+    parse_args(argc, argv);
 
     // Determine input message.
     char * msg = NULL;

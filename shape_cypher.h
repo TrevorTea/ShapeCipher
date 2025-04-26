@@ -47,6 +47,16 @@ char * decrypt(int key, char* msg);
 char * encrypt(int key, char* msg);
 
 /**
+ * Parses arguments for main and modifies them in the static global context.
+ * 
+ * @param argc Integer count of CLI args.
+ * @param argv Pointer to strings of CLI.
+ * 
+ * @throw EXIT_FAILURE Usage error if wrong # of args.
+ */
+void parse_args(int argc, char** argv);
+
+/**
  * Applies a Caeserian shift to the provided message. Message must be upper
  *      alpha. This is an inplace operation.
  * @param msg String message to shift.
