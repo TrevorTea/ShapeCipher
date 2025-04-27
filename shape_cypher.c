@@ -64,6 +64,26 @@ char * decrypt(int key, char* msg) {
     return res;
 }
 
+char * determine_msg(char* path_or_msg) {
+        char * msg = NULL;
+        if (strstr(path_or_msg, ".txt")) {
+            FILE* inp = fopen(path_or_msg, "r");
+            fseek(inp, 0, SEEK_END);
+            uint sz = ftell(inp);
+            if (sz > MAXFILESIZE) {
+                fprintf(stderr, "Input file exceed max size.\n");
+                exit(EXIT_FAILURE);
+            }
+            rewind(inp);
+            msg = (char*) calloc(sz + 1, sizeof(char));
+            msg = fgets(msg, sz, inp);
+        }
+        else {
+            msg = path_or_msg;
+        }
+        return msg;
+}
+
 char * encrypt(int key, char* msg) {
     uint len;
     uint strplen;
@@ -87,7 +107,7 @@ char * encrypt(int key, char* msg) {
 
     // TODO Add dynamic padding that can be intelligently shredded later.
 
-    strp = _pad_str(strp, key - (strplen % key), 'G');
+    if (strplen % key) strp = _pad_str(strp, key - (strplen % key), 'G');
     strplen = strlen(strp);
     chunksize = strplen / key;
     
@@ -149,46 +169,28 @@ int main(int argc, char** argv) {
     parse_args(argc, argv);
 
     // Determine input message.
-    char * msg = NULL;
-    if (strstr(path_or_msg, ".txt")) {
-        FILE* inp = fopen(path_or_msg, "r");
-        fseek(inp, 0, SEEK_END);
-        uint sz = ftell(inp);
-        if (sz > MAXFILESIZE) {
-            fprintf(stderr, "Input file exceed max size.\n");
-            return 1;
-        }
-        rewind(inp);
-        msg = (char*) malloc(sizeof(char) * (sz + 1));
-        msg = fgets(msg, sz, inp);
-        msg[sz] = '\0';
-    }
-    else {
-        msg = path_or_msg;
-    }
+    char * msg = determine_msg(path_or_msg);
 
     // Determine whether to encrypt or decrypt and do.
     char* result = NULL;
     if (strcmp(mode, "encrypt") == 0) {
         result = encrypt(key, msg);
     }
-    // TODO Add decryption.
     else if (strcmp(mode, "decrypt") == 0) {
         result = decrypt(key, msg);
     }
     
     // Determine output stream.
     FILE* out = NULL;
-    if (argc == 5) {
+    if (outpath) {
         out = fopen(outpath, "w");
     }
     else out = stdout;
 
     // Output printing and resource cleanup.
-    fprintf(out, "%s", result);
-    fprintf(out, "\n");
+    fprintf(out, "%s\n", result);
     free(result);
-    if (out) fclose(out);
+    fclose(out);
     return 0;
 }
 

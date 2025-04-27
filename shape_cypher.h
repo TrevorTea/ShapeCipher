@@ -10,7 +10,7 @@
 ///                                 DEFINES                                 ///
 ///////////////////////////////////////////////////////////////////////////////
 
-#define ALPHAWRAP(x) (((x - 0x41) % 26) + 0x41)
+#define ALPHAWRAP(x) (x - 'A' < 0 ? x - 'A' + 26 : x - 'A') % 26 + 'A'
 #define CEIL(x) ((x - (int)x) ? (int)(x + 1) : (int)(x))
 #define ISALPHA(x) ((x > 0x40 && x < 0x5B) || (x > 0x60 && x < 0x7B))
 #define MAXFILESIZE (1<<16)
@@ -39,6 +39,15 @@ typedef unsigned int uint;
  * @returns Decrypted message.
  */
 char * decrypt(int key, char* msg);
+
+/**
+ * Determines the message from either input path or direct CLI.
+ * 
+ * @param path_or_msg Either raw message string or path to text file.
+ * 
+ * @returns String message.
+ */
+char * determine_msg(char* path_or_msg);
 
 /**
  * Encrypts a string message given an integer key.
