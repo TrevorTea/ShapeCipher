@@ -2,7 +2,7 @@
 ///                                INCLUDES                                 ///
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "shape_cypher.h"
+#include "shape_cipher.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 ///                                 DEFINES                                 ///
@@ -139,7 +139,7 @@ char * encrypt(int key, char* msg) {
 void parse_args(int argc, char** argv) {
     // Arg parsing.
     if (argc < 4 || argc > 5) {
-        fprintf(stderr, "Improper usage: cypher \"encode\"|\"decode\" key "
+        fprintf(stderr, "Improper usage: cipher \"encode\"|\"decode\" key "
                         "msg|path [outPath].\n");
         exit(EXIT_FAILURE);
     }
