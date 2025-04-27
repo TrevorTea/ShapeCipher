@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 // Static globals for arg parsing.
-static int key;
+static uint key;
 static char* mode;
 static char* path_or_msg;
 static char* outpath;
@@ -35,16 +35,21 @@ static char* outpath;
 char * _pad_str(char* str,
                 uint padlen,
                 const char val) {
-    char* res = (char*) calloc(strlen(str) + padlen + 1, sizeof(char));
+    uint len;
+    char *res;
+
+    len = strlen(str);
+    res = (char*) calloc(len + padlen + 1, sizeof(char));
     strcpy(res, str);
-    for(uint i = strlen(str); i < strlen(str) + padlen; i++) {
+    for (uint i = len; i < len + padlen; i++) {
         res[i] = val;
     }
+
     free(str);
     return res;
 }
 
-char * decrypt(int key, char* msg) {
+char * decrypt(uint key, char* msg) {
     uint len;
     uint chunksize;
     char *res;
@@ -53,8 +58,8 @@ char * decrypt(int key, char* msg) {
     chunksize = len / key;
     res = (char*) calloc(len + 1, sizeof(char));
 
-    for(uint i = 0; i < chunksize; i++) {
-        for(uint j = 0; j < key; j++) {
+    for (uint i = 0; i < chunksize; i++) {
+        for (uint j = 0; j < key; j++) {
             res[i * key + j] = msg[i + j * chunksize];
         }
     }
@@ -67,9 +72,12 @@ char * decrypt(int key, char* msg) {
 char * determine_msg(char* path_or_msg) {
         char * msg = NULL;
         if (strstr(path_or_msg, ".txt")) {
-            FILE* inp = fopen(path_or_msg, "r");
+            FILE* inp;
+            uint sz;
+            
+            inp = fopen(path_or_msg, "r");
             fseek(inp, 0, SEEK_END);
-            uint sz = ftell(inp);
+            sz = ftell(inp);
             if (sz > MAXFILESIZE) {
                 fprintf(stderr, "Input file exceed max size.\n");
                 exit(EXIT_FAILURE);
@@ -79,12 +87,13 @@ char * determine_msg(char* path_or_msg) {
             msg = fgets(msg, sz, inp);
         }
         else {
-            msg = path_or_msg;
+            msg = (char*) calloc(strlen(path_or_msg), sizeof(char));
+            strcpy(msg, path_or_msg);
         }
         return msg;
 }
 
-char * encrypt(int key, char* msg) {
+char * encrypt(uint key, char* msg) {
     uint len;
     uint strplen;
     uint chunksize;
@@ -116,12 +125,12 @@ char * encrypt(int key, char* msg) {
         subs[i] = (char*) calloc(chunksize + 1, sizeof(char));
     }
     // Columnar encoding of substrings.
-    for(uint i = 0; i < strplen; i++) {
+    for (uint i = 0; i < strplen; i++) {
         subs[i%key][i/key] = strp[i];
     }
     // Combine substrings.
     res = (char *) calloc(strplen + 1, sizeof(char));
-    for(uint i = 0; i < key; i++) {
+    for (uint i = 0; i < key; i++) {
         strcat(res, subs[i]);
     }
     // Apply caesarian shift.
@@ -156,7 +165,7 @@ void parse_args(int argc, char** argv) {
 }
 
 void shift_caeserian(char* msg, int shift) {
-    for(uint i = 0; i < strlen(msg); i++) {
+    for (uint i = 0; i < strlen(msg); i++) {
         msg[i] = ALPHAWRAP(msg[i] + shift);
     }
 }
@@ -190,6 +199,7 @@ int main(int argc, char** argv) {
     // Output printing and resource cleanup.
     fprintf(out, "%s\n", result);
     free(result);
+    free(msg);
     fclose(out);
     return 0;
 }

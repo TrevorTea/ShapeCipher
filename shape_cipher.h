@@ -38,7 +38,7 @@ typedef unsigned int uint;
  * 
  * @returns Decrypted message.
  */
-char * decrypt(int key, char* msg);
+char * decrypt(uint key, char* msg);
 
 /**
  * Determines the message from either input path or direct CLI.
@@ -57,7 +57,7 @@ char * determine_msg(char* path_or_msg);
  * 
  * @returns Encrypted message.
  */
-char * encrypt(int key, char* msg);
+char * encrypt(uint key, char* msg);
 
 /**
  * Parses arguments for main and modifies them in the static global context.
