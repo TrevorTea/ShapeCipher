@@ -12,12 +12,6 @@
 ///                                 GLOBALS                                 ///
 ///////////////////////////////////////////////////////////////////////////////
 
-// Static globals for arg parsing.
-static uint key;
-static char* mode;
-static char* path_or_msg;
-static char* outpath;
-
 ///////////////////////////////////////////////////////////////////////////////
 ///                                  ENUMS                                  ///
 ///////////////////////////////////////////////////////////////////////////////
@@ -145,23 +139,26 @@ char * encrypt(uint key, char* msg) {
     return res;
 }
 
-void parse_args(int argc, char** argv) {
+struct arglist * parse_args(int argc, char** argv) {
     // Arg parsing.
     if (argc < 4 || argc > 5) {
-        fprintf(stderr, "Improper usage: cipher \"encode\"|\"decode\" key "
+        fprintf(stderr, "Improper usage: cipher \"encrypt\"|\"decrypt\" key "
                         "msg|path [outPath].\n");
         exit(EXIT_FAILURE);
     }
 
-    mode = argv[1];
-    key = atoi(argv[2]);
-    path_or_msg = argv[3];
-    outpath = (argc == 5) ? argv[4] : NULL;
+    struct arglist* args = malloc(sizeof(struct args *));
+    args->mode = argv[1];
+    args->key = atoi(argv[2]);
+    args->path_or_msg = argv[3];
+    args->outpath = (argc == 5) ? argv[4] : NULL;
 
-    if (strcmp(mode, "encrypt") != 0 && strcmp(mode, "decrypt") != 0) {
+    if (strcmp(args->mode, "encrypt") != 0 && strcmp(args->mode, "decrypt") != 0) {
         fprintf(stderr, "Improper usage: mode must be \"encrypt|decrypt\"\n");
         exit(EXIT_FAILURE);
     }
+
+    return args;
 }
 
 void shift_caeserian(char* msg, int shift) {
@@ -173,36 +170,6 @@ void shift_caeserian(char* msg, int shift) {
 ///////////////////////////////////////////////////////////////////////////////
 ///                                   MAIN                                  ///
 ///////////////////////////////////////////////////////////////////////////////
-
-int main(int argc, char** argv) {
-    parse_args(argc, argv);
-
-    // Determine input message.
-    char * msg = determine_msg(path_or_msg);
-
-    // Determine whether to encrypt or decrypt and do.
-    char* result = NULL;
-    if (strcmp(mode, "encrypt") == 0) {
-        result = encrypt(key, msg);
-    }
-    else if (strcmp(mode, "decrypt") == 0) {
-        result = decrypt(key, msg);
-    }
-    
-    // Determine output stream.
-    FILE* out = NULL;
-    if (outpath) {
-        out = fopen(outpath, "w");
-    }
-    else out = stdout;
-
-    // Output printing and resource cleanup.
-    fprintf(out, "%s\n", result);
-    free(result);
-    free(msg);
-    fclose(out);
-    return 0;
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 ///                                  NOTES                                  ///

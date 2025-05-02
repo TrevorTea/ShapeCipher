@@ -26,6 +26,11 @@ typedef unsigned int uint;
 ///                                 STRUCTS                                 ///
 ///////////////////////////////////////////////////////////////////////////////
 
+struct arglist {char* mode;
+                int key;
+                char* path_or_msg;
+                char* outpath;};
+
 ///////////////////////////////////////////////////////////////////////////////
 ///                                FUNCTIONS                                ///
 ///////////////////////////////////////////////////////////////////////////////
@@ -65,9 +70,11 @@ char * encrypt(uint key, char* msg);
  * @param argc Integer count of CLI args.
  * @param argv Pointer to strings of CLI.
  * 
+ * @return Struct containing args.
+ * 
  * @throw EXIT_FAILURE Usage error if wrong # of args.
  */
-void parse_args(int argc, char** argv);
+struct arglist* parse_args(int argc, char** argv);
 
 /**
  * Applies a Caeserian shift to the provided message. Message must be upper
